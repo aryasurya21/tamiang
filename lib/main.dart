@@ -31,9 +31,9 @@ class MyApp extends StatelessWidget {
           create: (context) => MoonCakesProvider(null, null, []),
         ),
         ChangeNotifierProxyProvider<AuthProvider, OrdersProvider>(
-          update: (context, value, previous) => OrdersProvider(
-            null,
-            null,
+          update: (context, auth, previous) => OrdersProvider(
+            auth.token,
+            auth.userID,
             previous.orderedCakes == null ? [] : previous.orderedCakes,
           ),
           create: (context) => OrdersProvider(null, null, []),

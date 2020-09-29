@@ -12,9 +12,6 @@ class UserOrderScreen extends StatefulWidget {
 }
 
 class _UserOrderScreenState extends State<UserOrderScreen> {
-  var _isLoading = false;
-  var _isFirstTime = true;
-
   Future<void> _refreshData(BuildContext context) async {
     try {
       await Provider.of<OrdersProvider>(context, listen: false).fetchOrders();
@@ -40,42 +37,40 @@ class _UserOrderScreenState extends State<UserOrderScreen> {
         drawer: NavigationDrawer(),
         body: FutureBuilder(
           future: this._refreshData(context),
-          builder: (context, snapshot) => snapshot.connectionState ==
-                  ConnectionState.waiting
-              ? Center(
-                  child: CircularProgressIndicator(
-                    backgroundColor: Colors.red,
-                  ),
-                )
-              : RefreshIndicator(
-                  backgroundColor: Colors.red,
-                  onRefresh: () => this._refreshData(context),
-                  child: Consumer<OrdersProvider>(
-                    builder: (context, orders, child) {
-                      return Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: ListView.builder(
-                          itemBuilder: (context, index) {
-                            return Column(
-                              children: <Widget>[
-                                OrderTile(
-                                  index + 1,
-                                  orders.orderedCakes[index].orderID,
-                                  orders.orderedCakes[index].orderName,
-                                  orders.orderedCakes[index].orderTotalPrice,
-                                ),
-                                Divider(
-                                  color: Colors.red,
-                                )
-                              ],
-                            );
-                          },
-                          itemCount: orders.orderedCakes.length,
-                        ),
-                      );
-                    },
-                  ),
-                ),
+          builder: (context, snapshot) =>
+              snapshot.connectionState == ConnectionState.waiting
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        backgroundColor: Colors.red,
+                      ),
+                    )
+                  : RefreshIndicator(
+                      backgroundColor: Colors.red,
+                      onRefresh: () => this._refreshData(context),
+                      child: Consumer<OrdersProvider>(
+                        builder: (context, orders, child) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: ListView.builder(
+                              itemBuilder: (context, index) {
+                                return Column(
+                                  children: <Widget>[
+                                    OrderTile(
+                                      index + 1,
+                                      orders.orderedCakes[index],
+                                    ),
+                                    Divider(
+                                      color: Colors.red,
+                                    )
+                                  ],
+                                );
+                              },
+                              itemCount: orders.orderedCakes.length,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
         ));
   }
 }

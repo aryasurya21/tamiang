@@ -51,25 +51,32 @@ class OrdersProvider with ChangeNotifier {
     try {
       final url =
           "${Constants.baseURL}/orders/${this._userID}.json?auth=${this._authToken}";
+
       final response = await http.post(
         url,
         body: json.encode({
           "name": model.orderName,
           "date": model.orderDate.toString(),
-          "orders": model.orderPackages,
+          "orders": model.orderPackages
+              .map((op) => {
+                    "id": op.packageID,
+                    "mooncake": op.mooncake.toJson(),
+                    "qty": op.quantity,
+                  })
+              .toList(),
           "totalprice": model.orderTotalPrice
         }),
       );
 
-      this._orderedCakes.insert(
-          0,
-          CakeOrderModel(
-            orderID: json.decode(response.body)["id"],
-            orderName: model.orderName,
-            orderDate: model.orderDate,
-            orderPackages: model.orderPackages,
-            orderTotalPrice: model.orderTotalPrice,
-          ));
+      this._orderedCakes.add(
+            CakeOrderModel(
+              orderID: json.decode(response.body)["id"],
+              orderName: model.orderName,
+              orderDate: model.orderDate,
+              orderPackages: model.orderPackages,
+              orderTotalPrice: model.orderTotalPrice,
+            ),
+          );
       notifyListeners();
     } catch (err) {
       throw err;
@@ -84,7 +91,7 @@ class OrdersProvider with ChangeNotifier {
       final List<CakeOrderModel> loadedOrders = [];
       final decodedResponse =
           json.decode(response.body) as Map<String, dynamic>;
-      if (decodedResponse != null) {
+      if (decodedResponse == null) {
         return;
       }
       decodedResponse.forEach((orderID, orderData) {
@@ -92,8 +99,8 @@ class OrdersProvider with ChangeNotifier {
           orderID: orderID,
           orderName: orderData["name"],
           orderDate: DateTime.parse(orderData["date"]),
-          orderPackages: this.generateOrderData(
-              orderData["orders"] as List<Map<String, dynamic>>),
+          orderPackages:
+              this.generateOrderData(orderData["orders"] as List<dynamic>),
           orderTotalPrice: orderData["totalprice"],
         ));
       });
@@ -104,29 +111,24 @@ class OrdersProvider with ChangeNotifier {
     }
   }
 
-  List<CakePackage> generateOrderData(List<Map<String, dynamic>> packages) {
+  List<CakePackage> generateOrderData(List<dynamic> packages) {
     List<CakePackage> generatedList = [];
-    for (int i = 0; i < packages.length - 1; i++) {
-      packages[i].forEach((packageID, packageData) {
-        generatedList.add(CakePackage(
-          packageID: packageID,
-          mooncake: this.generateCakeModel(packageData["cake"]),
-          quantity: packageData["qty"],
-        ));
-      });
+    for (int i = 0; i < packages.length; i++) {
+      generatedList.add(CakePackage(
+          packageID: packages[i]["id"],
+          mooncake: this.generateCakeModel((packages[i]["mooncake"])),
+          quantity: packages[i]["qty"]));
     }
+
     return generatedList;
   }
 
   MoonCakeModel generateCakeModel(Map<String, dynamic> cakeDict) {
-    MoonCakeModel model;
-    cakeDict.forEach((moonCakeID, moonCakeData) {
-      model = MoonCakeModel(
-        moonCakeID: moonCakeID,
-        moonCakeName: moonCakeData["name"],
-        moonCakePrice: moonCakeData["price"],
-      );
-    });
+    MoonCakeModel model = MoonCakeModel(
+      moonCakeID: cakeDict["id"],
+      moonCakeName: cakeDict["name"],
+      moonCakePrice: cakeDict["price"],
+    );
     return model;
   }
 
@@ -152,10 +154,10 @@ class OrdersProvider with ChangeNotifier {
 
 class CakeOrderModel with ChangeNotifier {
   final String orderID;
-  final String orderName;
-  final DateTime orderDate;
-  final List<CakePackage> orderPackages;
-  final double orderTotalPrice;
+  String orderName;
+  DateTime orderDate;
+  List<CakePackage> orderPackages;
+  double orderTotalPrice;
 
   CakeOrderModel({
     @required this.orderID,
@@ -167,9 +169,9 @@ class CakeOrderModel with ChangeNotifier {
 }
 
 class CakePackage with ChangeNotifier {
-  final String packageID;
-  final MoonCakeModel mooncake;
-  final int quantity;
+  String packageID;
+  MoonCakeModel mooncake;
+  int quantity;
 
   CakePackage({
     @required this.packageID,

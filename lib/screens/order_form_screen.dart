@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:tamiang/models/mooncake_model.dart';
 import 'package:tamiang/providers/mooncakes_provider.dart';
 import 'package:tamiang/providers/orders_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class OrderFormScreen extends StatefulWidget {
   static const routeName = "order-form";
@@ -16,7 +17,8 @@ class OrderFormScreen extends StatefulWidget {
 
 class _OrderFormScreenState extends State<StatefulWidget> {
   final _formKey = GlobalKey<FormState>();
-  var _editedCake = CakeOrderModel(
+  static var uuid = Uuid();
+  var _editedOrder = CakeOrderModel(
       orderDate: null,
       orderID: null,
       orderName: null,
@@ -26,7 +28,9 @@ class _OrderFormScreenState extends State<StatefulWidget> {
   var _packageCards = <Dismissible>[];
   var _isFirstTime = true;
   var _isLoading = false;
-  List<MoonCakeModel> selectedMoonCakes = [null];
+  List<CakePackage> selectedMoonCakes = [
+    CakePackage(mooncake: null, quantity: null, packageID: uuid.v1().toString())
+  ];
   List<MoonCakeModel> moonCakeList = [];
   var _numberOfPackages = 1;
 
@@ -36,11 +40,11 @@ class _OrderFormScreenState extends State<StatefulWidget> {
     if (this._isFirstTime) {
       final orderID = ModalRoute.of(context).settings.arguments as String;
       if (orderID != null) {
-        this._editedCake = Provider.of<OrdersProvider>(context, listen: false)
+        this._editedOrder = Provider.of<OrdersProvider>(context, listen: false)
             .getOrderByID(orderID);
         this._initValues = {
-          "name": this._editedCake.orderName,
-          "date": this._editedCake.orderDate.toString()
+          "name": this._editedOrder.orderName,
+          "date": this._editedOrder.orderDate.toString()
         };
       }
       Provider.of<MoonCakesProvider>(context).fetchMoonCakes().then((_) {
@@ -100,9 +104,20 @@ class _OrderFormScreenState extends State<StatefulWidget> {
             children: <Widget>[
               _dropdownbutton(this.moonCakeList, index),
               Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Text("x")),
-              Expanded(child: TextFormField()),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text("x"),
+              ),
+              Container(
+                  width: 20,
+                  child: TextFormField(
+                    onChanged: (value) {
+                      if (value != "") {
+                        this.selectedMoonCakes[index].quantity =
+                            int.parse(value);
+                      }
+                      print(this.selectedMoonCakes);
+                    },
+                  )),
               Text("Kotak")
             ],
           ),
@@ -111,24 +126,33 @@ class _OrderFormScreenState extends State<StatefulWidget> {
     );
   }
 
+  double calculateTotalPrice(List<CakePackage> list) {
+    double totalPrice = 0;
+    list.forEach((element) {
+      totalPrice += (element.mooncake.moonCakePrice * element.quantity);
+    });
+    return totalPrice;
+  }
+
   Widget _dropdownbutton(List<MoonCakeModel> mooncakeList, int index) {
     return Container(
-      padding: EdgeInsets.all(1),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         border: Border.all(),
-        borderRadius: BorderRadius.all(Radius.circular(15.0) //
-            ),
+        borderRadius: BorderRadius.all(
+          Radius.circular(25.0),
+        ),
       ),
       child: DropdownButton<MoonCakeModel>(
         underline: SizedBox(),
         icon: Icon(Icons.arrow_drop_down),
         hint: Text("Pilih kue"),
-        value: selectedMoonCakes[index],
+        value: selectedMoonCakes[index].mooncake,
         onChanged: (MoonCakeModel value) {
           print(value.toString());
           print(index);
           setState(() {
-            selectedMoonCakes[index] = value;
+            selectedMoonCakes[index].mooncake = value;
           });
         },
         items: mooncakeList.map((MoonCakeModel model) {
@@ -136,9 +160,6 @@ class _OrderFormScreenState extends State<StatefulWidget> {
             value: model,
             child: Row(
               children: <Widget>[
-                SizedBox(
-                  width: 10,
-                ),
                 Text(
                   model.moonCakeName,
                   style: TextStyle(color: Colors.black),
@@ -156,13 +177,16 @@ class _OrderFormScreenState extends State<StatefulWidget> {
     if (!isValid) {
       return;
     }
+    this._editedOrder.orderPackages = this.selectedMoonCakes;
+    this._editedOrder.orderTotalPrice =
+        this.calculateTotalPrice(this.selectedMoonCakes);
     setState(() {
       this._isLoading = true;
     });
     this._formKey.currentState.save();
-    if (this._editedCake.orderID != null) {
+    if (this._editedOrder.orderID != null) {
       await Provider.of<OrdersProvider>(context)
-          .updateOrders(this._editedCake.orderID, this._editedCake)
+          .updateOrders(this._editedOrder.orderID, this._editedOrder)
           .then((_) {
         setState(() {
           this._isLoading = false;
@@ -171,7 +195,7 @@ class _OrderFormScreenState extends State<StatefulWidget> {
       });
     } else {
       try {
-        await Provider.of<OrdersProvider>(context).addOrders(this._editedCake);
+        await Provider.of<OrdersProvider>(context).addOrders(this._editedOrder);
       } catch (err) {
         await showDialog(
           context: context,
@@ -202,17 +226,17 @@ class _OrderFormScreenState extends State<StatefulWidget> {
     showDatePicker(
             context: context,
             initialDate: DateTime.now(),
-            firstDate: DateTime(2019),
+            firstDate: DateTime(2020),
             lastDate: DateTime.now())
         .then((pickedDate) {
       if (pickedDate == null) return;
       setState(() {
-        this._editedCake = CakeOrderModel(
+        this._editedOrder = CakeOrderModel(
             orderDate: pickedDate,
-            orderID: this._editedCake.orderID,
-            orderName: this._editedCake.orderName,
-            orderPackages: this._editedCake.orderPackages,
-            orderTotalPrice: this._editedCake.orderTotalPrice);
+            orderID: this._editedOrder.orderID,
+            orderName: this._editedOrder.orderName,
+            orderPackages: this._editedOrder.orderPackages,
+            orderTotalPrice: this._editedOrder.orderTotalPrice);
       });
     });
   }
@@ -246,13 +270,13 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                         initialValue: this._initValues["name"],
                         decoration: InputDecoration(labelText: "Nama Pemesan"),
                         textInputAction: TextInputAction.next,
-                        onSaved: (newValue) {
-                          this._editedCake = CakeOrderModel(
-                            orderDate: this._editedCake.orderDate,
-                            orderID: this._editedCake.orderID,
+                        onChanged: (newValue) {
+                          this._editedOrder = CakeOrderModel(
+                            orderDate: this._editedOrder.orderDate,
+                            orderID: this._editedOrder.orderID,
                             orderName: newValue,
-                            orderPackages: this._editedCake.orderPackages,
-                            orderTotalPrice: this._editedCake.orderTotalPrice,
+                            orderPackages: this._editedOrder.orderPackages,
+                            orderTotalPrice: this._editedOrder.orderTotalPrice,
                           );
                         },
                         validator: (value) {
@@ -268,9 +292,9 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                         child: Row(
                           children: <Widget>[
                             Expanded(
-                              child: Text(this._editedCake.orderDate == null
+                              child: Text(this._editedOrder.orderDate == null
                                   ? "Tidak ada tanggal terpilih"
-                                  : "Tanggal Orderan: ${DateFormat().add_yMMMMd().format(this._editedCake.orderDate)}"),
+                                  : "Tanggal Orderan: ${DateFormat().add_yMMMMd().format(this._editedOrder.orderDate)}"),
                             ),
                             FlatButton(
                               textColor: Theme.of(context).primaryColor,
@@ -309,7 +333,13 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                             ),
                             onPressed: () {
                               this._numberOfPackages++;
-                              this.selectedMoonCakes.add(null);
+                              this.selectedMoonCakes.add(
+                                    CakePackage(
+                                      mooncake: null,
+                                      quantity: null,
+                                      packageID: uuid.v1().toString(),
+                                    ),
+                                  );
                               setState(() {});
                             },
                           ),

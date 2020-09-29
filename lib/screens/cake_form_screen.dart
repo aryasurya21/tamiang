@@ -5,7 +5,7 @@ import 'package:tamiang/models/mooncake_model.dart';
 import 'package:tamiang/providers/mooncakes_provider.dart';
 
 class CakeFormScreen extends StatefulWidget {
-  static const routeName = "order-form";
+  static const routeName = "cake-form";
   CakeFormScreen({Key key}) : super(key: key);
 
   @override

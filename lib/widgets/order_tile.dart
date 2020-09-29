@@ -6,17 +6,14 @@ import 'package:tamiang/screens/order_form_screen.dart';
 
 class OrderTile extends StatelessWidget {
   final int position;
-  final String orderID;
-  final String ordererName;
-  final double orderTotalPrice;
+  final CakeOrderModel model;
 
-  OrderTile(
-      this.position, this.orderID, this.ordererName, this.orderTotalPrice);
+  OrderTile(this.position, this.model);
 
   @override
   Widget build(BuildContext context) {
-    FlutterMoneyFormatter fmf = new FlutterMoneyFormatter(
-      amount: this.orderTotalPrice,
+    FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
+      amount: this.model.orderTotalPrice,
       settings: MoneyFormatterSettings(
           symbol: 'Rp',
           thousandSeparator: '.',
@@ -29,12 +26,50 @@ class OrderTile extends StatelessWidget {
     final scaffold = Scaffold.of(context);
     return ListTile(
       title: Text(
-        this.ordererName,
+        this.model.orderName,
         style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
       ),
-      subtitle: Text(
-        fmf.output.symbolOnLeft.toString(),
-        style: TextStyle(fontSize: 15),
+      subtitle: Container(
+        width: MediaQuery.of(context).size.width,
+        height: 100,
+        child: Column(
+          children: <Widget>[
+            Text(formattedTotaLPrice.output.symbolOnLeft.toString(),
+                style: TextStyle(fontSize: 15)),
+            Expanded(
+              child: ListView.builder(
+                itemCount: this.model.orderPackages.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return Container(
+                    child: Column(
+                      children: <Widget>[
+                        Text(
+                          this.model.orderPackages[index].mooncake.moonCakeName,
+                        ),
+                        Row(
+                          children: <Widget>[
+                            Text(this
+                                .model
+                                .orderPackages[index]
+                                .mooncake
+                                .moonCakePrice
+                                .toString()),
+                            Text("x"),
+                            Text(this
+                                .model
+                                .orderPackages[index]
+                                .quantity
+                                .toString())
+                          ],
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
       leading: Text(this.position.toString()),
       trailing: Container(
@@ -46,7 +81,7 @@ class OrderTile extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pushNamed(
                   OrderFormScreen.routeName,
-                  arguments: this.orderID,
+                  arguments: this.model.orderID,
                 );
               },
               color: Theme.of(context).primaryColor,
@@ -56,7 +91,7 @@ class OrderTile extends StatelessWidget {
               onPressed: () async {
                 try {
                   await Provider.of<OrdersProvider>(context, listen: false)
-                      .deleteOrder(this.orderID);
+                      .deleteOrder(this.model.orderID);
                 } catch (err) {
                   scaffold.showSnackBar(
                     SnackBar(

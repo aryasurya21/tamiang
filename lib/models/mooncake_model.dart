@@ -10,4 +10,10 @@ class MoonCakeModel {
     @required this.moonCakeName,
     @required this.moonCakePrice,
   });
+
+  Map toJson() => {
+        "id": this.moonCakeID,
+        "name": this.moonCakeName,
+        "price": this.moonCakePrice
+      };
 }
