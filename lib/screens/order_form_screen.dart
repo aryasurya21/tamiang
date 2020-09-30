@@ -107,17 +107,16 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text("x"),
               ),
-              Container(
-                  width: 20,
-                  child: TextFormField(
-                    onChanged: (value) {
-                      if (value != "") {
-                        this.selectedMoonCakes[index].quantity =
-                            int.parse(value);
-                      }
-                      print(this.selectedMoonCakes);
-                    },
-                  )),
+              Expanded(
+                child: TextFormField(
+                  onChanged: (value) {
+                    if (value != "") {
+                      this.selectedMoonCakes[index].quantity = int.parse(value);
+                    }
+                    print(this.selectedMoonCakes);
+                  },
+                ),
+              ),
               Text("Kotak")
             ],
           ),
@@ -177,13 +176,51 @@ class _OrderFormScreenState extends State<StatefulWidget> {
     if (!isValid) {
       return;
     }
+    if (this._editedOrder.orderDate == null) {
+      return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Error"),
+          content: Text("Tanggal orderan tidak boleh kosong"),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        ),
+      );
+    }
+    if (this.selectedMoonCakes.elementAt(0).mooncake == null) {
+      return showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text("Error"),
+          content: Text("Anda minimal harus memilih 1 jenis kue dalam orderan"),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("OK"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            )
+          ],
+        ),
+      );
+    }
+
     this._editedOrder.orderPackages = this.selectedMoonCakes;
     this._editedOrder.orderTotalPrice =
         this.calculateTotalPrice(this.selectedMoonCakes);
+
     setState(() {
       this._isLoading = true;
     });
+
     this._formKey.currentState.save();
+
     if (this._editedOrder.orderID != null) {
       await Provider.of<OrdersProvider>(context)
           .updateOrders(this._editedOrder.orderID, this._editedOrder)
