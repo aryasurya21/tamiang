@@ -59,9 +59,6 @@ class _UserOrderScreenState extends State<UserOrderScreen> {
                                       index + 1,
                                       orders.orderedCakes[index],
                                     ),
-                                    Divider(
-                                      color: Colors.red,
-                                    )
                                   ],
                                 );
                               },
