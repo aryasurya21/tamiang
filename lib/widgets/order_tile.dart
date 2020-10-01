@@ -11,6 +11,12 @@ class OrderTile extends StatelessWidget {
 
   OrderTile(this.position, this.model);
 
+  double _generateDiscountedPrice() {
+    double discountedPrice =
+        this.model.orderDisc / 100 * this.model.orderTotalPrice;
+    return this.model.orderTotalPrice - discountedPrice;
+  }
+
   @override
   Widget build(BuildContext context) {
     FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
@@ -128,13 +134,34 @@ class OrderTile extends StatelessWidget {
               SizedBox(
                 height: 10,
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Persen Diskon'),
+                  Text(
+                    "${this.model.orderDisc.toStringAsFixed(0)}%",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 10,
+              ),
               Divider(
-                color: Colors.red,
+                color: Colors.grey,
+              ),
+              SizedBox(
+                height: 10,
               ),
               Container(
                 height: this.model.orderPackages.length > 10
-                    ? this.model.orderPackages.length.toDouble() * 40
-                    : this.model.orderPackages.length.toDouble() * 43,
+                    ? this.model.orderPackages.length > 15
+                        ? this.model.orderPackages.length.toDouble() * 44
+                        : this.model.orderPackages.length.toDouble() * 43
+                    : this.model.orderPackages.length.toDouble() * 40,
                 child: ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: this.model.orderPackages.length,
@@ -218,22 +245,46 @@ class OrderTile extends StatelessWidget {
                 ),
               ),
               Divider(
-                color: Colors.red,
+                color: Colors.grey,
               ),
               SizedBox(
                 height: 10,
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Total    ",
+                    "Sebelum Diskon",
                     style: TextStyle(
                       fontSize: 16,
                     ),
                   ),
                   Text(
                     formattedTotaLPrice.output.symbolOnLeft.toString(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Setelah Diskon",
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    _getCurrencyFormat(this._generateDiscountedPrice(), 1)
+                        .output
+                        .symbolOnLeft
+                        .toString(),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

@@ -19,12 +19,18 @@ class _OrderFormScreenState extends State<StatefulWidget> {
   final _formKey = GlobalKey<FormState>();
   static var uuid = Uuid();
   var _editedOrder = CakeOrderModel(
-      orderDate: null,
-      orderID: null,
-      orderName: null,
-      orderPackages: [],
-      orderTotalPrice: null);
-  Map<String, String> _initValues = {"name": "", "date": ""};
+    orderDate: null,
+    orderID: null,
+    orderName: null,
+    orderPackages: [],
+    orderTotalPrice: null,
+    orderDisc: null,
+  );
+  Map<String, String> _initValues = {
+    "name": "",
+    "date": "",
+    "diskon": "",
+  };
   var _packageCards = <Dismissible>[];
   var _isFirstTime = true;
   var _isLoading = false;
@@ -44,7 +50,8 @@ class _OrderFormScreenState extends State<StatefulWidget> {
             .getOrderByID(orderID);
         this._initValues = {
           "name": this._editedOrder.orderName,
-          "date": this._editedOrder.orderDate.toString()
+          "date": this._editedOrder.orderDate.toString(),
+          "diskon": this._editedOrder.orderDisc.toStringAsFixed(0).toString()
         };
       }
       Provider.of<MoonCakesProvider>(context).fetchMoonCakes().then((_) {
@@ -269,11 +276,13 @@ class _OrderFormScreenState extends State<StatefulWidget> {
       if (pickedDate == null) return;
       setState(() {
         this._editedOrder = CakeOrderModel(
-            orderDate: pickedDate,
-            orderID: this._editedOrder.orderID,
-            orderName: this._editedOrder.orderName,
-            orderPackages: this._editedOrder.orderPackages,
-            orderTotalPrice: this._editedOrder.orderTotalPrice);
+          orderDate: pickedDate,
+          orderID: this._editedOrder.orderID,
+          orderName: this._editedOrder.orderName,
+          orderPackages: this._editedOrder.orderPackages,
+          orderTotalPrice: this._editedOrder.orderTotalPrice,
+          orderDisc: this._editedOrder.orderDisc,
+        );
       });
     });
   }
@@ -314,11 +323,34 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                             orderName: newValue,
                             orderPackages: this._editedOrder.orderPackages,
                             orderTotalPrice: this._editedOrder.orderTotalPrice,
+                            orderDisc: this._editedOrder.orderDisc,
                           );
                         },
                         validator: (value) {
                           if (value.isEmpty) {
                             return "Nama Pelanggan tidak boleh kosong";
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        initialValue: this._initValues["diskon"],
+                        decoration: InputDecoration(labelText: "Persen Diskon"),
+                        textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.number,
+                        onChanged: (newValue) {
+                          this._editedOrder = CakeOrderModel(
+                            orderDate: this._editedOrder.orderDate,
+                            orderID: this._editedOrder.orderID,
+                            orderName: this._editedOrder.orderName,
+                            orderPackages: this._editedOrder.orderPackages,
+                            orderTotalPrice: this._editedOrder.orderTotalPrice,
+                            orderDisc: double.parse(newValue),
+                          );
+                        },
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return "Persen Diskon tidak boleh kosong";
                           }
                           return null;
                         },
@@ -357,16 +389,14 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                         child: Container(
                           height: 50,
                           margin: const EdgeInsets.only(bottom: 10),
-                          child: RaisedButton(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50.0),
-                                side: BorderSide(color: Colors.red)),
-                            elevation: 4,
-                            color: Colors.red,
-                            textColor: Colors.white,
+                          child: FloatingActionButton(
+                            backgroundColor: Theme.of(context).primaryColor,
                             child: Text(
-                              "Tambah Kue di Pesanan",
-                              style: TextStyle(fontSize: 16),
+                              "+",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 25,
+                              ),
                             ),
                             onPressed: () {
                               this._numberOfPackages++;
