@@ -132,7 +132,9 @@ class OrderTile extends StatelessWidget {
                 color: Colors.red,
               ),
               Container(
-                height: this.model.orderPackages.length.toDouble() * 40,
+                height: this.model.orderPackages.length > 10
+                    ? this.model.orderPackages.length.toDouble() * 40
+                    : this.model.orderPackages.length.toDouble() * 43,
                 child: ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: this.model.orderPackages.length,
@@ -144,7 +146,7 @@ class OrderTile extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Row(
-                                children: [
+                                children: <Widget>[
                                   Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
@@ -161,11 +163,15 @@ class OrderTile extends StatelessWidget {
                                         ),
                                       ),
                                       Text(
-                                        this
-                                            .model
-                                            .orderPackages[index]
-                                            .mooncake
-                                            .moonCakePrice
+                                        _getCurrencyFormat(
+                                                this
+                                                    .model
+                                                    .orderPackages[index]
+                                                    .mooncake
+                                                    .moonCakePrice,
+                                                1)
+                                            .output
+                                            .symbolOnLeft
                                             .toString(),
                                         style: TextStyle(
                                           fontSize: 14,
