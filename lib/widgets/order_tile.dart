@@ -16,7 +16,7 @@ class OrderTile extends StatelessWidget {
     FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
       amount: this.model.orderTotalPrice,
       settings: MoneyFormatterSettings(
-        symbol: 'Rp',
+        symbol: 'Rp.',
         thousandSeparator: '.',
         decimalSeparator: ',',
         symbolAndNumberSeparator: ' ',
@@ -25,8 +25,24 @@ class OrderTile extends StatelessWidget {
       ),
     );
 
+    FlutterMoneyFormatter _getCurrencyFormat(double price, int qty) {
+      FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
+        amount: price * qty,
+        settings: MoneyFormatterSettings(
+          symbol: 'Rp.',
+          thousandSeparator: '.',
+          decimalSeparator: ',',
+          symbolAndNumberSeparator: ' ',
+          fractionDigits: 0,
+          compactFormatType: CompactFormatType.long,
+        ),
+      );
+      return formattedTotaLPrice;
+    }
+
     final scaffold = Scaffold.of(context);
     return Card(
+      elevation: 3,
       margin: const EdgeInsets.all(5),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -57,19 +73,42 @@ class OrderTile extends StatelessWidget {
                         IconButton(
                           icon: Icon(Icons.delete),
                           onPressed: () async {
-                            try {
-                              await Provider.of<OrdersProvider>(context,
-                                      listen: false)
-                                  .deleteOrder(this.model.orderID);
-                            } catch (err) {
-                              scaffold.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      "Gagal ketika menghapus, silahkan coba lagi."),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
+                            await showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text("Yakin?"),
+                                content: Text(
+                                    "Apakah anda yakin untuk menghapus orderan ini?"),
+                                elevation: 3,
+                                actions: <Widget>[
+                                  FlatButton(
+                                    child: Text("Tidak"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(false);
+                                    },
+                                  ),
+                                  FlatButton(
+                                    child: Text("Ya"),
+                                    onPressed: () {
+                                      try {
+                                        Provider.of<OrdersProvider>(context,
+                                                listen: false)
+                                            .deleteOrder(this.model.orderID);
+                                        Navigator.of(context).pop(true);
+                                      } catch (err) {
+                                        scaffold.showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                "Gagal ketika menghapus, silahkan coba lagi."),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  )
+                                ],
+                              ),
+                            );
                           },
                           color: Theme.of(context).errorColor,
                         )
@@ -143,11 +182,18 @@ class OrderTile extends StatelessWidget {
                                 ],
                               ),
                               Text(
-                                this
-                                    .model
-                                    .orderPackages[index]
-                                    .mooncake
-                                    .moonCakePrice
+                                _getCurrencyFormat(
+                                        this
+                                            .model
+                                            .orderPackages[index]
+                                            .mooncake
+                                            .moonCakePrice,
+                                        this
+                                            .model
+                                            .orderPackages[index]
+                                            .quantity)
+                                    .output
+                                    .symbolOnLeft
                                     .toString(),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
