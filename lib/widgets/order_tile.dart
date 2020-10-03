@@ -97,7 +97,7 @@ class OrderTile extends StatelessWidget {
 
     FlutterMoneyFormatter _getCurrencyFormat(double price, int qty) {
       FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
-        amount: price * qty,
+        amount: qty == null ? price : price * qty,
         settings: MoneyFormatterSettings(
           symbol: 'Rp.',
           thousandSeparator: '.',

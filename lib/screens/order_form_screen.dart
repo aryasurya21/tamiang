@@ -16,7 +16,9 @@ class OrderFormScreen extends StatefulWidget {
 }
 
 class _OrderFormScreenState extends State<StatefulWidget> {
-  final _formKey = GlobalKey<FormState>();
+  static final _formKey = GlobalKey<FormState>();
+  final nameFocus = FocusNode();
+  final discFocus = FocusNode();
   static var uuid = Uuid();
   var _editedOrder = CakeOrderModel(
     orderDate: null,
@@ -32,6 +34,8 @@ class _OrderFormScreenState extends State<StatefulWidget> {
     "diskon": "",
   };
   var _packageCards = <Dismissible>[];
+  var _focusQuantity = <FocusNode>[];
+
   var _isFirstTime = true;
   var _isLoading = false;
 
@@ -63,12 +67,15 @@ class _OrderFormScreenState extends State<StatefulWidget> {
           this._numberOfPackages = this._editedOrder.orderPackages.length;
           this.selectedMoonCakes = this._editedOrder.orderPackages;
           for (int i = 0; i < this._numberOfPackages; i++) {
+            this._focusQuantity.add(FocusNode());
             this._packageCards.add(createCard(i));
           }
         });
       } else {
+        this._focusQuantity.add(FocusNode());
         this._packageCards.add(createCard(0));
       }
+      this.nameFocus.requestFocus();
       this._isFirstTime = false;
     }
   }
@@ -114,7 +121,6 @@ class _OrderFormScreenState extends State<StatefulWidget> {
       },
       onDismissed: (_) {
         setState(() {
-          this._packageCards.removeAt(index);
           this._numberOfPackages--;
           this.selectedMoonCakes.removeAt(index);
         });
@@ -131,11 +137,17 @@ class _OrderFormScreenState extends State<StatefulWidget> {
               ),
               Expanded(
                 child: TextFormField(
+                  onTap: () {
+                    this._focusQuantity[index].requestFocus();
+                    SystemChannels.textInput.invokeMethod('TextInput.show');
+                  },
+                  focusNode: this._focusQuantity[index],
                   keyboardType: TextInputType.number,
                   initialValue: this.selectedMoonCakes[index].quantity == null
                       ? ""
                       : this.selectedMoonCakes[index].quantity.toString(),
                   onChanged: (value) {
+                    this._focusQuantity[index].requestFocus();
                     if (value != "" && int.tryParse(value) != null) {
                       this.selectedMoonCakes[index].quantity = int.parse(value);
                     }
@@ -143,7 +155,6 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                   },
                 ),
               ),
-              Text("Kotak")
             ],
           ),
         ),
@@ -169,31 +180,34 @@ class _OrderFormScreenState extends State<StatefulWidget> {
         ),
       ),
       child: this.moonCakeList.length > 0
-          ? DropdownButton<MoonCakeModel>(
-              underline: SizedBox(),
-              icon: Icon(Icons.arrow_drop_down),
-              hint: Text("Pilih kue"),
-              value: selectedMoonCakes[index].mooncake,
-              onChanged: (MoonCakeModel value) {
-                setState(() {
-                  selectedMoonCakes[index].mooncake = value;
-                });
-                print(value);
-                print(selectedMoonCakes);
-              },
-              items: mooncakeList.map((MoonCakeModel model) {
-                return DropdownMenuItem<MoonCakeModel>(
-                  value: model,
-                  child: Row(
-                    children: <Widget>[
-                      Text(
-                        model.moonCakeName,
-                        style: TextStyle(color: Colors.black),
-                      ),
-                    ],
-                  ),
-                );
-              }).toList(),
+          ? Listener(
+              onPointerDown: (_) => FocusScope.of(context).unfocus(),
+              child: DropdownButton<MoonCakeModel>(
+                underline: SizedBox(),
+                icon: Icon(Icons.arrow_drop_down),
+                hint: Text("Pilih kue"),
+                value: selectedMoonCakes[index].mooncake,
+                onChanged: (MoonCakeModel value) {
+                  setState(() {
+                    selectedMoonCakes[index].mooncake = value;
+                  });
+                  print(value);
+                  print(selectedMoonCakes);
+                },
+                items: mooncakeList.map((MoonCakeModel model) {
+                  return DropdownMenuItem<MoonCakeModel>(
+                    value: model,
+                    child: Row(
+                      children: <Widget>[
+                        Text(
+                          model.moonCakeName,
+                          style: TextStyle(color: Colors.black),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
             )
           : Center(
               child: CircularProgressIndicator(
@@ -222,7 +236,7 @@ class _OrderFormScreenState extends State<StatefulWidget> {
   }
 
   Future<void> saveData() async {
-    final isValid = this._formKey.currentState.validate();
+    final isValid = _formKey.currentState.validate();
     if (!isValid) {
       return;
     }
@@ -254,7 +268,7 @@ class _OrderFormScreenState extends State<StatefulWidget> {
       this._isLoading = true;
     });
 
-    this._formKey.currentState.save();
+    _formKey.currentState.save();
 
     if (this._editedOrder.orderID != null) {
       await Provider.of<OrdersProvider>(context)
@@ -318,6 +332,7 @@ class _OrderFormScreenState extends State<StatefulWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         title: Text("Tambah/ Edit Orderan"),
         actions: <Widget>[
@@ -336,16 +351,18 @@ class _OrderFormScreenState extends State<StatefulWidget> {
           : Padding(
               padding: const EdgeInsets.all(10),
               child: Form(
-                key: this._formKey,
+                key: _formKey,
                 child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height,
                   child: Column(
                     children: <Widget>[
                       TextFormField(
+                        focusNode: this.nameFocus,
                         initialValue: this._initValues["name"],
                         decoration: InputDecoration(labelText: "Nama Pemesan"),
                         textInputAction: TextInputAction.next,
+                        onFieldSubmitted: (value) {
+                          this.discFocus.requestFocus();
+                        },
                         onChanged: (newValue) {
                           this._editedOrder = CakeOrderModel(
                             orderDate: this._editedOrder.orderDate,
@@ -364,10 +381,12 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                         },
                       ),
                       TextFormField(
+                        focusNode: this.discFocus,
                         initialValue: this._initValues["diskon"],
                         decoration: InputDecoration(labelText: "Persen Diskon"),
                         textInputAction: TextInputAction.next,
                         keyboardType: TextInputType.number,
+                        onEditingComplete: () => this.discFocus.unfocus(),
                         onChanged: (newValue) {
                           if (double.tryParse(newValue) != null) {
                             this._editedOrder = CakeOrderModel(
@@ -435,10 +454,11 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                             ),
                             onPressed: () {
                               this._numberOfPackages++;
+                              this._focusQuantity.add(FocusNode());
                               this.selectedMoonCakes.add(
                                     CakePackage(
                                       mooncake: null,
-                                      quantity: null,
+                                      quantity: 0,
                                       packageID: uuid.v1().toString(),
                                     ),
                                   );
