@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tamiang/providers/mooncakes_provider.dart';
-import 'package:tamiang/screens/order_form_screen.dart';
 import 'package:tamiang/screens/cake_form_screen.dart';
 import 'package:tamiang/widgets/mooncake_tile.dart';
 import 'package:tamiang/widgets/navigation_drawer.dart';
@@ -21,6 +20,7 @@ class UserCakeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).accentColor,
       drawer: NavigationDrawer(),
       appBar: AppBar(
         title: Text("Daftar Kue Anda"),
@@ -59,9 +59,6 @@ class UserCakeScreen extends StatelessWidget {
                                     mooncakes.mooncakes[index].moonCakeName,
                                     mooncakes.mooncakes[index].moonCakePrice,
                                   ),
-                                  Divider(
-                                    color: Colors.red,
-                                  )
                                 ],
                               );
                             },

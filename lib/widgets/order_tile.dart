@@ -63,10 +63,10 @@ class OrderTile extends StatelessWidget {
     );
   }
 
-  Widget _detailCardOrderPackage(List<CakePackage> orderPackages){
+  Widget _detailCardOrderPackage(List<CakePackage> orderPackages) {
     final containers = <Widget>[];
-    for(int i = 0; i < orderPackages.length; i++){
-      containers.add( _detailContainerCakeOrderPackage(orderPackages[i]));
+    for (int i = 0; i < orderPackages.length; i++) {
+      containers.add(_detailContainerCakeOrderPackage(orderPackages[i]));
     }
     return Container(
       child: Column(
@@ -75,12 +75,18 @@ class OrderTile extends StatelessWidget {
     );
   }
 
+  double _generateDiscountedPrice() {
+    double discountedPrice =
+        this.model.orderDisc / 100 * this.model.orderTotalPrice;
+    return this.model.orderTotalPrice - discountedPrice;
+  }
+
   @override
   Widget build(BuildContext context) {
     FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
       amount: this.model.orderTotalPrice,
       settings: MoneyFormatterSettings(
-        symbol: 'Rp',
+        symbol: 'Rp.',
         thousandSeparator: '.',
         decimalSeparator: ',',
         symbolAndNumberSeparator: ' ',
@@ -89,8 +95,24 @@ class OrderTile extends StatelessWidget {
       ),
     );
 
+    FlutterMoneyFormatter _getCurrencyFormat(double price, int qty) {
+      FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
+        amount: price * qty,
+        settings: MoneyFormatterSettings(
+          symbol: 'Rp.',
+          thousandSeparator: '.',
+          decimalSeparator: ',',
+          symbolAndNumberSeparator: ' ',
+          fractionDigits: 0,
+          compactFormatType: CompactFormatType.long,
+        ),
+      );
+      return formattedTotaLPrice;
+    }
+
     final scaffold = Scaffold.of(context);
     return Card(
+      elevation: 3,
       margin: const EdgeInsets.all(5),
       child: Padding(
         padding: const EdgeInsets.all(20.0),
@@ -121,19 +143,42 @@ class OrderTile extends StatelessWidget {
                         IconButton(
                           icon: Icon(Icons.delete),
                           onPressed: () async {
-                            try {
-                              await Provider.of<OrdersProvider>(context,
-                                      listen: false)
-                                  .deleteOrder(this.model.orderID);
-                            } catch (err) {
-                              scaffold.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                      "Gagal ketika menghapus, silahkan coba lagi."),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
+                            await showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text("Yakin?"),
+                                content: Text(
+                                    "Apakah anda yakin untuk menghapus orderan ini?"),
+                                elevation: 3,
+                                actions: <Widget>[
+                                  FlatButton(
+                                    child: Text("Tidak"),
+                                    onPressed: () {
+                                      Navigator.of(context).pop(false);
+                                    },
+                                  ),
+                                  FlatButton(
+                                    child: Text("Ya"),
+                                    onPressed: () {
+                                      try {
+                                        Provider.of<OrdersProvider>(context,
+                                                listen: false)
+                                            .deleteOrder(this.model.orderID);
+                                        Navigator.of(context).pop(true);
+                                      } catch (err) {
+                                        scaffold.showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                "Gagal ketika menghapus, silahkan coba lagi."),
+                                            backgroundColor: Colors.red,
+                                          ),
+                                        );
+                                      }
+                                    },
+                                  )
+                                ],
+                              ),
+                            );
                           },
                           color: Theme.of(context).errorColor,
                         )
@@ -153,27 +198,70 @@ class OrderTile extends StatelessWidget {
               SizedBox(
                 height: 10,
               ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Persen Diskon'),
+                  Text(
+                    "${this.model.orderDisc.toStringAsFixed(0)}%",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 10,
+              ),
               Divider(
-                color: Colors.red,
+                color: Colors.grey,
+              ),
+              SizedBox(
+                height: 10,
               ),
               _detailCardOrderPackage(this.model.orderPackages),
               Divider(
-                color: Colors.red,
+                color: Colors.grey,
               ),
               SizedBox(
                 height: 10,
               ),
               Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    "Total    ",
+                    "Sebelum Diskon",
                     style: TextStyle(
                       fontSize: 16,
                     ),
                   ),
                   Text(
                     formattedTotaLPrice.output.symbolOnLeft.toString(),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Setelah Diskon",
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    _getCurrencyFormat(this._generateDiscountedPrice(), 1)
+                        .output
+                        .symbolOnLeft
+                        .toString(),
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,

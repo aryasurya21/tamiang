@@ -101,7 +101,9 @@ class _CakeFormScreenState extends State<StatefulWidget> {
       ),
       body: this._isLoading
           ? Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                backgroundColor: Colors.red,
+              ),
             )
           : Padding(
               padding: const EdgeInsets.all(10),

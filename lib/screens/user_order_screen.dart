@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tamiang/providers/orders_provider.dart';
 import 'package:tamiang/screens/order_form_screen.dart';
-import 'package:tamiang/screens/cake_form_screen.dart';
 import 'package:tamiang/widgets/navigation_drawer.dart';
 import 'package:tamiang/widgets/order_tile.dart';
 
@@ -23,6 +22,7 @@ class _UserOrderScreenState extends State<UserOrderScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+        backgroundColor: Theme.of(context).accentColor,
         appBar: AppBar(
           title: Text("Pesanan"),
           actions: <Widget>[

@@ -88,10 +88,6 @@ class _AuthScreenState extends State<AuthScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text(
-                "Tamiang",
-                style: TextStyle(fontSize: 20),
-              ),
               Image.asset(
                 "assets/images/login.png",
                 height: MediaQuery.of(context).size.height * 0.35,

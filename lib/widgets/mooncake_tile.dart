@@ -27,49 +27,51 @@ class MoonCakeTile extends StatelessWidget {
     );
 
     final scaffold = Scaffold.of(context);
-    return ListTile(
-      title: Text(
-        this.moonCakeName,
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text(
-        fmf.output.symbolOnLeft.toString(),
-        style: TextStyle(fontSize: 15),
-      ),
-      leading: Text(this.position.toString()),
-      trailing: Container(
-        width: 100,
-        child: Row(
-          children: <Widget>[
-            IconButton(
-              icon: Icon(Icons.edit),
-              onPressed: () {
-                Navigator.of(context).pushNamed(
-                  CakeFormScreen.routeName,
-                  arguments: this.moonCakeID,
-                );
-              },
-              color: Theme.of(context).primaryColor,
-            ),
-            IconButton(
-              icon: Icon(Icons.delete),
-              onPressed: () async {
-                try {
-                  await Provider.of<MoonCakesProvider>(context, listen: false)
-                      .deleteMoonCake(this.moonCakeID);
-                } catch (err) {
-                  scaffold.showSnackBar(
-                    SnackBar(
-                      content:
-                          Text("Gagal ketika menghapus, silahkan coba lagi."),
-                      backgroundColor: Colors.red,
-                    ),
+    return Card(
+      child: ListTile(
+        title: Text(
+          this.moonCakeName,
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          fmf.output.symbolOnLeft.toString(),
+          style: TextStyle(fontSize: 15),
+        ),
+        leading: Text(this.position.toString()),
+        trailing: Container(
+          width: 100,
+          child: Row(
+            children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.edit),
+                onPressed: () {
+                  Navigator.of(context).pushNamed(
+                    CakeFormScreen.routeName,
+                    arguments: this.moonCakeID,
                   );
-                }
-              },
-              color: Theme.of(context).errorColor,
-            )
-          ],
+                },
+                color: Theme.of(context).primaryColor,
+              ),
+              IconButton(
+                icon: Icon(Icons.delete),
+                onPressed: () async {
+                  try {
+                    await Provider.of<MoonCakesProvider>(context, listen: false)
+                        .deleteMoonCake(this.moonCakeID);
+                  } catch (err) {
+                    scaffold.showSnackBar(
+                      SnackBar(
+                        content:
+                            Text("Gagal ketika menghapus, silahkan coba lagi."),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                color: Theme.of(context).errorColor,
+              )
+            ],
+          ),
         ),
       ),
     );

@@ -19,15 +19,22 @@ class _OrderFormScreenState extends State<StatefulWidget> {
   final _formKey = GlobalKey<FormState>();
   static var uuid = Uuid();
   var _editedOrder = CakeOrderModel(
-      orderDate: null,
-      orderID: null,
-      orderName: null,
-      orderPackages: [],
-      orderTotalPrice: null);
-  Map<String, String> _initValues = {"name": "", "date": ""};
+    orderDate: null,
+    orderID: null,
+    orderName: null,
+    orderPackages: [],
+    orderTotalPrice: null,
+    orderDisc: null,
+  );
+  Map<String, String> _initValues = {
+    "name": "",
+    "date": "",
+    "diskon": "",
+  };
   var _packageCards = <Dismissible>[];
   var _isFirstTime = true;
   var _isLoading = false;
+
   List<CakePackage> selectedMoonCakes = [
     CakePackage(mooncake: null, quantity: null, packageID: uuid.v1().toString())
   ];
@@ -38,26 +45,37 @@ class _OrderFormScreenState extends State<StatefulWidget> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (this._isFirstTime) {
+      Provider.of<MoonCakesProvider>(context).fetchMoonCakes().then((_) {
+        this.moonCakeList = Provider.of<MoonCakesProvider>(context).mooncakes;
+      });
+
       final orderID = ModalRoute.of(context).settings.arguments as String;
+
       if (orderID != null) {
         this._editedOrder = Provider.of<OrdersProvider>(context, listen: false)
             .getOrderByID(orderID);
         this._initValues = {
           "name": this._editedOrder.orderName,
-          "date": this._editedOrder.orderDate.toString()
+          "date": this._editedOrder.orderDate.toString(),
+          "diskon": this._editedOrder.orderDisc.toStringAsFixed(0).toString()
         };
-      }
-      Provider.of<MoonCakesProvider>(context).fetchMoonCakes().then((_) {
-        this.moonCakeList = Provider.of<MoonCakesProvider>(context).mooncakes;
+        setState(() {
+          this._numberOfPackages = this._editedOrder.orderPackages.length;
+          this.selectedMoonCakes = this._editedOrder.orderPackages;
+          for (int i = 0; i < this._numberOfPackages; i++) {
+            this._packageCards.add(createCard(i));
+          }
+        });
+      } else {
         this._packageCards.add(createCard(0));
-      });
+      }
       this._isFirstTime = false;
     }
   }
 
   Widget createCard(final index) {
     return Dismissible(
-      key: ValueKey(index),
+      key: UniqueKey(),
       background: Container(
         color: Theme.of(context).errorColor,
         child: Icon(
@@ -95,7 +113,11 @@ class _OrderFormScreenState extends State<StatefulWidget> {
         );
       },
       onDismissed: (_) {
-        setState(() {});
+        setState(() {
+          this._packageCards.removeAt(index);
+          this._numberOfPackages--;
+          this.selectedMoonCakes.removeAt(index);
+        });
       },
       child: Card(
         child: Padding(
@@ -109,8 +131,12 @@ class _OrderFormScreenState extends State<StatefulWidget> {
               ),
               Expanded(
                 child: TextFormField(
+                  keyboardType: TextInputType.number,
+                  initialValue: this.selectedMoonCakes[index].quantity == null
+                      ? ""
+                      : this.selectedMoonCakes[index].quantity.toString(),
                   onChanged: (value) {
-                    if (value != "") {
+                    if (value != "" && int.tryParse(value) != null) {
                       this.selectedMoonCakes[index].quantity = int.parse(value);
                     }
                     print(this.selectedMoonCakes);
@@ -142,31 +168,55 @@ class _OrderFormScreenState extends State<StatefulWidget> {
           Radius.circular(25.0),
         ),
       ),
-      child: DropdownButton<MoonCakeModel>(
-        underline: SizedBox(),
-        icon: Icon(Icons.arrow_drop_down),
-        hint: Text("Pilih kue"),
-        value: selectedMoonCakes[index].mooncake,
-        onChanged: (MoonCakeModel value) {
-          print(value.toString());
-          print(index);
-          setState(() {
-            selectedMoonCakes[index].mooncake = value;
-          });
-        },
-        items: mooncakeList.map((MoonCakeModel model) {
-          return DropdownMenuItem<MoonCakeModel>(
-            value: model,
-            child: Row(
-              children: <Widget>[
-                Text(
-                  model.moonCakeName,
-                  style: TextStyle(color: Colors.black),
-                ),
-              ],
+      child: this.moonCakeList.length > 0
+          ? DropdownButton<MoonCakeModel>(
+              underline: SizedBox(),
+              icon: Icon(Icons.arrow_drop_down),
+              hint: Text("Pilih kue"),
+              value: selectedMoonCakes[index].mooncake,
+              onChanged: (MoonCakeModel value) {
+                setState(() {
+                  selectedMoonCakes[index].mooncake = value;
+                });
+                print(value);
+                print(selectedMoonCakes);
+              },
+              items: mooncakeList.map((MoonCakeModel model) {
+                return DropdownMenuItem<MoonCakeModel>(
+                  value: model,
+                  child: Row(
+                    children: <Widget>[
+                      Text(
+                        model.moonCakeName,
+                        style: TextStyle(color: Colors.black),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            )
+          : Center(
+              child: CircularProgressIndicator(
+                backgroundColor: Colors.red,
+              ),
             ),
-          );
-        }).toList(),
+    );
+  }
+
+  Future<dynamic> _showPopupError(String title) {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Error"),
+        content: Text(title),
+        actions: <Widget>[
+          FlatButton(
+            child: Text("OK"),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          )
+        ],
       ),
     );
   }
@@ -176,39 +226,24 @@ class _OrderFormScreenState extends State<StatefulWidget> {
     if (!isValid) {
       return;
     }
+
     if (this._editedOrder.orderDate == null) {
-      return showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Error"),
-          content: Text("Tanggal orderan tidak boleh kosong"),
-          actions: <Widget>[
-            FlatButton(
-              child: Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            )
-          ],
-        ),
-      );
+      this._showPopupError("Tanggal orderan tidak boleh kosong");
+      return;
     }
-    if (this.selectedMoonCakes.elementAt(0).mooncake == null) {
-      return showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Error"),
-          content: Text("Anda minimal harus memilih 1 jenis kue dalam orderan"),
-          actions: <Widget>[
-            FlatButton(
-              child: Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            )
-          ],
-        ),
-      );
+
+    if (this.selectedMoonCakes.length == 0) {
+      this._showPopupError(
+          "Anda harus setidaknya memilih 1 jenis kue dalam orderan");
+      return;
+    }
+
+    for (var item in this.selectedMoonCakes) {
+      if (item.mooncake == null || item.quantity == null) {
+        this._showPopupError(
+            "Anda harus mengisi semua data kue dengan lengkap sesuai jumlah kue yang sudah dibuat sebelumnya");
+        return;
+      }
     }
 
     this._editedOrder.orderPackages = this.selectedMoonCakes;
@@ -269,11 +304,13 @@ class _OrderFormScreenState extends State<StatefulWidget> {
       if (pickedDate == null) return;
       setState(() {
         this._editedOrder = CakeOrderModel(
-            orderDate: pickedDate,
-            orderID: this._editedOrder.orderID,
-            orderName: this._editedOrder.orderName,
-            orderPackages: this._editedOrder.orderPackages,
-            orderTotalPrice: this._editedOrder.orderTotalPrice);
+          orderDate: pickedDate,
+          orderID: this._editedOrder.orderID,
+          orderName: this._editedOrder.orderName,
+          orderPackages: this._editedOrder.orderPackages,
+          orderTotalPrice: this._editedOrder.orderTotalPrice,
+          orderDisc: this._editedOrder.orderDisc,
+        );
       });
     });
   }
@@ -292,7 +329,9 @@ class _OrderFormScreenState extends State<StatefulWidget> {
       ),
       body: this._isLoading
           ? Center(
-              child: CircularProgressIndicator(),
+              child: CircularProgressIndicator(
+                backgroundColor: Colors.red,
+              ),
             )
           : Padding(
               padding: const EdgeInsets.all(10),
@@ -314,11 +353,39 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                             orderName: newValue,
                             orderPackages: this._editedOrder.orderPackages,
                             orderTotalPrice: this._editedOrder.orderTotalPrice,
+                            orderDisc: this._editedOrder.orderDisc,
                           );
                         },
                         validator: (value) {
                           if (value.isEmpty) {
                             return "Nama Pelanggan tidak boleh kosong";
+                          }
+                          return null;
+                        },
+                      ),
+                      TextFormField(
+                        initialValue: this._initValues["diskon"],
+                        decoration: InputDecoration(labelText: "Persen Diskon"),
+                        textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.number,
+                        onChanged: (newValue) {
+                          if (double.tryParse(newValue) != null) {
+                            this._editedOrder = CakeOrderModel(
+                              orderDate: this._editedOrder.orderDate,
+                              orderID: this._editedOrder.orderID,
+                              orderName: this._editedOrder.orderName,
+                              orderPackages: this._editedOrder.orderPackages,
+                              orderTotalPrice:
+                                  this._editedOrder.orderTotalPrice,
+                              orderDisc: double.parse(newValue),
+                            );
+                          }
+                        },
+                        validator: (value) {
+                          if (value.isEmpty) {
+                            return "Persen Diskon tidak boleh kosong";
+                          } else if (double.tryParse(value) == null) {
+                            return "Persen Diskon yang dimasukkan harus angka, tidak boleh huruf atau yang lain";
                           }
                           return null;
                         },
@@ -357,16 +424,14 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                         child: Container(
                           height: 50,
                           margin: const EdgeInsets.only(bottom: 10),
-                          child: RaisedButton(
-                            shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50.0),
-                                side: BorderSide(color: Colors.red)),
-                            elevation: 4,
-                            color: Colors.red,
-                            textColor: Colors.white,
+                          child: FloatingActionButton(
+                            backgroundColor: Theme.of(context).primaryColor,
                             child: Text(
-                              "Tambah Kue di Pesanan",
-                              style: TextStyle(fontSize: 16),
+                              "+",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 25,
+                              ),
                             ),
                             onPressed: () {
                               this._numberOfPackages++;

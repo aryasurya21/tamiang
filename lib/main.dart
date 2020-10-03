@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
           title: "Tamiang",
           theme: ThemeData(
             primarySwatch: Colors.red,
-            accentColor: Colors.white,
+            accentColor: Colors.pink[50],
             fontFamily: "Lato",
             visualDensity: VisualDensity.adaptivePlatformDensity,
           ),

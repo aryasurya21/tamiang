@@ -23,20 +23,27 @@ class OrdersProvider with ChangeNotifier {
         .firstWhere((element) => element.orderID == orderID);
   }
 
-  Future<void> updateOrders(String orderID, CakeOrderModel model) {
+  Future<void> updateOrders(String orderID, CakeOrderModel model) async {
     try {
       final targetIndex =
           this._orderedCakes.indexWhere((prod) => prod.orderID == orderID);
       if (targetIndex >= 0) {
         final url =
-            "${Constants.baseURL}/orders/${this._userID}.json?auth=${this._authToken}";
+            "${Constants.baseURL}/orders/${this._userID}/$orderID.json?auth=${this._authToken}";
         http.patch(
           url,
           body: json.encode({
             "name": model.orderName,
             "date": model.orderDate.toString(),
-            "orders": model.orderPackages,
-            "totalprice": model.orderTotalPrice
+            "orders": model.orderPackages
+                .map((op) => {
+                      "id": op.packageID,
+                      "mooncake": op.mooncake.toJson(),
+                      "qty": op.quantity,
+                    })
+                .toList(),
+            "totalprice": model.orderTotalPrice,
+            "diskon": model.orderDisc,
           }),
         );
         this._orderedCakes[targetIndex] = model;
@@ -52,7 +59,8 @@ class OrdersProvider with ChangeNotifier {
       final url =
           "${Constants.baseURL}/orders/${this._userID}.json?auth=${this._authToken}";
 
-      final response = await http.post(
+      await http
+          .post(
         url,
         body: json.encode({
           "name": model.orderName,
@@ -64,20 +72,25 @@ class OrdersProvider with ChangeNotifier {
                     "qty": op.quantity,
                   })
               .toList(),
-          "totalprice": model.orderTotalPrice
+          "totalprice": model.orderTotalPrice,
+          "diskon": model.orderDisc,
         }),
+      )
+          .then(
+        (response) {
+          this._orderedCakes.add(
+                CakeOrderModel(
+                  orderID: json.decode(response.body)["name"],
+                  orderName: model.orderName,
+                  orderDate: model.orderDate,
+                  orderPackages: model.orderPackages,
+                  orderTotalPrice: model.orderTotalPrice,
+                  orderDisc: model.orderDisc,
+                ),
+              );
+          notifyListeners();
+        },
       );
-
-      this._orderedCakes.add(
-            CakeOrderModel(
-              orderID: json.decode(response.body)["id"],
-              orderName: model.orderName,
-              orderDate: model.orderDate,
-              orderPackages: model.orderPackages,
-              orderTotalPrice: model.orderTotalPrice,
-            ),
-          );
-      notifyListeners();
     } catch (err) {
       throw err;
     }
@@ -102,6 +115,7 @@ class OrdersProvider with ChangeNotifier {
           orderPackages:
               this.generateOrderData(orderData["orders"] as List<dynamic>),
           orderTotalPrice: orderData["totalprice"],
+          orderDisc: orderData["diskon"],
         ));
       });
       this._orderedCakes = loadedOrders;
@@ -158,6 +172,7 @@ class CakeOrderModel with ChangeNotifier {
   DateTime orderDate;
   List<CakePackage> orderPackages;
   double orderTotalPrice;
+  double orderDisc;
 
   CakeOrderModel({
     @required this.orderID,
@@ -165,6 +180,7 @@ class CakeOrderModel with ChangeNotifier {
     @required this.orderDate,
     @required this.orderPackages,
     @required this.orderTotalPrice,
+    @required this.orderDisc,
   });
 }
 
