@@ -80,6 +80,7 @@ class AuthProvider with ChangeNotifier {
     this._userID = decodedCred["userID"];
     this._expireDate = DateTime.parse(decodedCred["expiryDate"]);
     this._setupAutoLogout();
+    this.notifyListeners();
     return true;
   }
 
