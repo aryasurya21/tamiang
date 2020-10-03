@@ -75,7 +75,7 @@ class _OrderFormScreenState extends State<StatefulWidget> {
 
   Widget createCard(final index) {
     return Dismissible(
-      key: ValueKey(index),
+      key: UniqueKey(),
       background: Container(
         color: Theme.of(context).errorColor,
         child: Icon(
@@ -113,7 +113,11 @@ class _OrderFormScreenState extends State<StatefulWidget> {
         );
       },
       onDismissed: (_) {
-        setState(() {});
+        setState(() {
+          this._packageCards.removeAt(index);
+          this._numberOfPackages--;
+          this.selectedMoonCakes.removeAt(index);
+        });
       },
       child: Card(
         child: Padding(
@@ -199,46 +203,46 @@ class _OrderFormScreenState extends State<StatefulWidget> {
     );
   }
 
+  Future<dynamic> _showPopupError(String title) {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Error"),
+        content: Text(title),
+        actions: <Widget>[
+          FlatButton(
+            child: Text("OK"),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          )
+        ],
+      ),
+    );
+  }
+
   Future<void> saveData() async {
     final isValid = this._formKey.currentState.validate();
     if (!isValid) {
       return;
     }
+
     if (this._editedOrder.orderDate == null) {
-      return showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text("Error"),
-          content: Text("Tanggal orderan tidak boleh kosong"),
-          actions: <Widget>[
-            FlatButton(
-              child: Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            )
-          ],
-        ),
-      );
+      this._showPopupError("Tanggal orderan tidak boleh kosong");
+      return;
     }
+
+    if (this.selectedMoonCakes.length == 0) {
+      this._showPopupError(
+          "Anda harus setidaknya memilih 1 jenis kue dalam orderan");
+      return;
+    }
+
     for (var item in this.selectedMoonCakes) {
       if (item.mooncake == null || item.quantity == null) {
-        return showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text("Error"),
-            content: Text(
-                "Anda harus mengisi semua data kue dengan lengkap sesuai jumlah kue yang sudah dibuat sebelumnya"),
-            actions: <Widget>[
-              FlatButton(
-                child: Text("OK"),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              )
-            ],
-          ),
-        );
+        this._showPopupError(
+            "Anda harus mengisi semua data kue dengan lengkap sesuai jumlah kue yang sudah dibuat sebelumnya");
+        return;
       }
     }
 

@@ -8,7 +8,7 @@ class NavigationDrawer extends StatelessWidget {
       child: Column(
         children: <Widget>[
           AppBar(
-            title: Text("Hello "),
+            title: Text("Hello Mamaku yang cantik"),
             automaticallyImplyLeading: false,
           ),
           Divider(),
