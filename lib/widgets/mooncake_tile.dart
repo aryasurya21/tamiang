@@ -53,23 +53,49 @@ class MoonCakeTile extends StatelessWidget {
                 color: Theme.of(context).primaryColor,
               ),
               IconButton(
-                icon: Icon(Icons.delete),
+                icon: Icon(
+                  Icons.delete,
+                  color: Theme.of(context).errorColor,
+                ),
                 onPressed: () async {
-                  try {
-                    await Provider.of<MoonCakesProvider>(context, listen: false)
-                        .deleteMoonCake(this.moonCakeID);
-                  } catch (err) {
-                    scaffold.showSnackBar(
-                      SnackBar(
-                        content:
-                            Text("Gagal ketika menghapus, silahkan coba lagi."),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
+                  await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text("Yakin?"),
+                      content:
+                          Text("Apakah anda yakin untuk menghapus kue ini?"),
+                      elevation: 3,
+                      actions: <Widget>[
+                        FlatButton(
+                          child: Text("Tidak"),
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                        ),
+                        FlatButton(
+                          child: Text("Ya"),
+                          onPressed: () {
+                            try {
+                              Provider.of<MoonCakesProvider>(context,
+                                      listen: false)
+                                  .deleteMoonCake(this.moonCakeID);
+                              Navigator.of(context).pop(true);
+                            } catch (err) {
+                              scaffold.showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                      "Gagal ketika menghapus, silahkan coba lagi."),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          },
+                        )
+                      ],
+                    ),
+                  );
                 },
-                color: Theme.of(context).errorColor,
-              )
+              ),
             ],
           ),
         ),
