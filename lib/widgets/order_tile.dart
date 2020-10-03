@@ -66,7 +66,7 @@ class OrderTile extends StatelessWidget {
   Widget _detailCardOrderPackage(List<CakePackage> orderPackages){
     final containers = <Widget>[];
     for(int i = 0; i < orderPackages.length; i++){
-      cards.add( _detailContainerCakeOrderPackage(orderPackages[i]));
+      containers.add( _detailContainerCakeOrderPackage(orderPackages[i]));
     }
     return Container(
       child: Column(
