@@ -11,6 +11,70 @@ class OrderTile extends StatelessWidget {
 
   OrderTile(this.position, this.model);
 
+  Widget _detailContainerCakeOrderPackage(CakePackage orderPackage) {
+    return Container(
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        orderPackage.mooncake.moonCakeName,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        orderPackage.mooncake.moonCakePrice.toString(),
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    "   x${orderPackage.quantity.toString()}",
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                orderPackage.mooncake.moonCakePrice.toString(),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 10,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailCardOrderPackage(List<CakePackage> orderPackages){
+    final containers = <Widget>[];
+    for(int i = 0; i < orderPackages.length; i++){
+      cards.add( _detailContainerCakeOrderPackage(orderPackages[i]));
+    }
+    return Container(
+      child: Column(
+        children: containers,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
@@ -92,79 +156,7 @@ class OrderTile extends StatelessWidget {
               Divider(
                 color: Colors.red,
               ),
-              Container(
-                height: this.model.orderPackages.length.toDouble() * 40,
-                child: ListView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: this.model.orderPackages.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return Container(
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        this
-                                            .model
-                                            .orderPackages[index]
-                                            .mooncake
-                                            .moonCakeName,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      Text(
-                                        this
-                                            .model
-                                            .orderPackages[index]
-                                            .mooncake
-                                            .moonCakePrice
-                                            .toString(),
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Text(
-                                    "   x${this.model.orderPackages[index].quantity.toString()}",
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              Text(
-                                this
-                                    .model
-                                    .orderPackages[index]
-                                    .mooncake
-                                    .moonCakePrice
-                                    .toString(),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                          SizedBox(
-                            height: 10,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ),
+              _detailCardOrderPackage(this.model.orderPackages),
               Divider(
                 color: Colors.red,
               ),
