@@ -23,13 +23,13 @@ class OrdersProvider with ChangeNotifier {
         .firstWhere((element) => element.orderID == orderID);
   }
 
-  Future<void> updateOrders(String orderID, CakeOrderModel model) {
+  Future<void> updateOrders(String orderID, CakeOrderModel model) async {
     try {
       final targetIndex =
           this._orderedCakes.indexWhere((prod) => prod.orderID == orderID);
       if (targetIndex >= 0) {
         final url =
-            "${Constants.baseURL}/orders/${this._userID}.json?auth=${this._authToken}";
+            "${Constants.baseURL}/orders/${this._userID}/$orderID.json?auth=${this._authToken}";
         http.patch(
           url,
           body: json.encode({
@@ -59,7 +59,8 @@ class OrdersProvider with ChangeNotifier {
       final url =
           "${Constants.baseURL}/orders/${this._userID}.json?auth=${this._authToken}";
 
-      final response = await http.post(
+      await http
+          .post(
         url,
         body: json.encode({
           "name": model.orderName,
@@ -74,19 +75,22 @@ class OrdersProvider with ChangeNotifier {
           "totalprice": model.orderTotalPrice,
           "diskon": model.orderDisc,
         }),
+      )
+          .then(
+        (response) {
+          this._orderedCakes.add(
+                CakeOrderModel(
+                  orderID: json.decode(response.body)["name"],
+                  orderName: model.orderName,
+                  orderDate: model.orderDate,
+                  orderPackages: model.orderPackages,
+                  orderTotalPrice: model.orderTotalPrice,
+                  orderDisc: model.orderDisc,
+                ),
+              );
+          notifyListeners();
+        },
       );
-
-      this._orderedCakes.add(
-            CakeOrderModel(
-              orderID: json.decode(response.body)["id"],
-              orderName: model.orderName,
-              orderDate: model.orderDate,
-              orderPackages: model.orderPackages,
-              orderTotalPrice: model.orderTotalPrice,
-              orderDisc: model.orderDisc,
-            ),
-          );
-      notifyListeners();
     } catch (err) {
       throw err;
     }

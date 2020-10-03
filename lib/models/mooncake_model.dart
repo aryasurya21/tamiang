@@ -16,4 +16,9 @@ class MoonCakeModel {
         "name": this.moonCakeName,
         "price": this.moonCakePrice
       };
+
+  int get hashCode => moonCakeID.hashCode;
+
+  bool operator ==(Object other) =>
+      other is MoonCakeModel && other.moonCakeID == moonCakeID;
 }
