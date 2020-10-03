@@ -31,7 +31,11 @@ class OrderTile extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        orderPackage.mooncake.moonCakePrice.toString(),
+                        _getCurrencyFormat(
+                                orderPackage.mooncake.moonCakePrice, 1)
+                            .output
+                            .symbolOnLeft
+                            .toString(),
                         style: TextStyle(
                           fontSize: 14,
                         ),
@@ -47,7 +51,11 @@ class OrderTile extends StatelessWidget {
                 ],
               ),
               Text(
-                orderPackage.mooncake.moonCakePrice.toString(),
+                _getCurrencyFormat(orderPackage.mooncake.moonCakePrice,
+                        orderPackage.quantity)
+                    .output
+                    .symbolOnLeft
+                    .toString(),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -75,6 +83,21 @@ class OrderTile extends StatelessWidget {
     );
   }
 
+  FlutterMoneyFormatter _getCurrencyFormat(double price, int qty) {
+    FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
+      amount: qty == null ? price : price * qty,
+      settings: MoneyFormatterSettings(
+        symbol: 'Rp.',
+        thousandSeparator: '.',
+        decimalSeparator: ',',
+        symbolAndNumberSeparator: ' ',
+        fractionDigits: 0,
+        compactFormatType: CompactFormatType.long,
+      ),
+    );
+    return formattedTotaLPrice;
+  }
+
   double _generateDiscountedPrice() {
     double discountedPrice =
         this.model.orderDisc / 100 * this.model.orderTotalPrice;
@@ -94,21 +117,6 @@ class OrderTile extends StatelessWidget {
         compactFormatType: CompactFormatType.long,
       ),
     );
-
-    FlutterMoneyFormatter _getCurrencyFormat(double price, int qty) {
-      FlutterMoneyFormatter formattedTotaLPrice = new FlutterMoneyFormatter(
-        amount: qty == null ? price : price * qty,
-        settings: MoneyFormatterSettings(
-          symbol: 'Rp.',
-          thousandSeparator: '.',
-          decimalSeparator: ',',
-          symbolAndNumberSeparator: ' ',
-          fractionDigits: 0,
-          compactFormatType: CompactFormatType.long,
-        ),
-      );
-      return formattedTotaLPrice;
-    }
 
     final scaffold = Scaffold.of(context);
     return Card(
