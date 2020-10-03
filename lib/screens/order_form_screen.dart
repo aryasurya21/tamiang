@@ -458,7 +458,7 @@ class _OrderFormScreenState extends State<StatefulWidget> {
                               this.selectedMoonCakes.add(
                                     CakePackage(
                                       mooncake: null,
-                                      quantity: 0,
+                                      quantity: null,
                                       packageID: uuid.v1().toString(),
                                     ),
                                   );
