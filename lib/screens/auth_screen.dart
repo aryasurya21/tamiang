@@ -40,8 +40,10 @@ class _AuthScreenState extends State<AuthScreen> {
       this.isLoading = true;
     });
     try {
-      await Provider.of<AuthProvider>(context)
-          .login(this._credentials["email"], this._credentials["password"]);
+      await Provider.of<AuthProvider>(context).login(
+        this._credentials["email"].trim(),
+        this._credentials["password"].trim(),
+      );
     } on HTTPException catch (err) {
       var errMessage = "Gagal login: ${err.message}";
       if (errMessage.toString().contains("INVALID_EMAIL")) {
@@ -89,8 +91,8 @@ class _AuthScreenState extends State<AuthScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Image.asset(
-                "assets/images/login.png",
-                height: MediaQuery.of(context).size.height * 0.35,
+                "assets/images/auth.png",
+                height: MediaQuery.of(context).size.height * 0.2,
               ),
               Form(
                 key: this._formKey,
@@ -121,7 +123,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             Icons.person,
                             color: Constants.primaryColor,
                           ),
-                          hintText: "Masukkan Email",
+                          hintText: "Email",
                           border: InputBorder.none,
                         ),
                       ),
@@ -146,7 +148,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             Icons.lock,
                             color: Constants.primaryColor,
                           ),
-                          hintText: "Masukkan Password",
+                          hintText: "Password",
                           border: InputBorder.none,
                           suffixIcon: InkWell(
                             onTap: this._togglePassword,

@@ -21,7 +21,7 @@ class MoonCakesProvider with ChangeNotifier {
     final filterString =
         filterByUserID ? 'orderBy="creatorID"&equalTo="$_userID"' : '';
     final url =
-        "${Constants.baseURL}/mooncakes.json?auth=${this._authToken}&$filterString";
+        "${Constants.baseURL}/mooncakes/${this._userID}.json?auth=${this._authToken}&$filterString";
 
     try {
       final response = await http.get(url);
@@ -47,7 +47,8 @@ class MoonCakesProvider with ChangeNotifier {
   }
 
   Future<void> addMoonCake(MoonCakeModel model) async {
-    final url = "${Constants.baseURL}/mooncakes.json?auth=${this._authToken}";
+    final url =
+        "${Constants.baseURL}/mooncakes/${this._userID}.json?auth=${this._authToken}";
     try {
       final response = await http.post(
         url,
@@ -82,7 +83,7 @@ class MoonCakesProvider with ChangeNotifier {
         this._mooncakes.indexWhere((prod) => prod.moonCakeID == cakeID);
     if (targetIndex >= 0) {
       final url =
-          "${Constants.baseURL}/mooncakes/$cakeID.json?auth=${this._authToken}";
+          "${Constants.baseURL}/mooncakes/${this._userID}/$cakeID.json?auth=${this._authToken}";
       http.patch(
         url,
         body: json.encode({
@@ -97,7 +98,7 @@ class MoonCakesProvider with ChangeNotifier {
 
   Future<void> deleteMoonCake(String cakeID) async {
     final url =
-        "${Constants.baseURL}/mooncakes/$cakeID.json?auth=${this._authToken}";
+        "${Constants.baseURL}/mooncakes/${this._userID}/$cakeID.json?auth=${this._authToken}";
     final existingProductindex =
         this._mooncakes.indexWhere((element) => element.moonCakeID == cakeID);
     var existingProduct = this._mooncakes[existingProductindex];

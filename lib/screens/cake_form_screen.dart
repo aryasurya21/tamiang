@@ -17,7 +17,7 @@ class _CakeFormScreenState extends State<StatefulWidget> {
   final _formKey = GlobalKey<FormState>();
   var _editedCake =
       MoonCakeModel(moonCakeID: null, moonCakeName: "", moonCakePrice: 0);
-  var _initValues = {"name": "", "price": ""};
+  var _initValues = {"name": "", "price": "0"};
   var _isFirstTime = true;
   var _isLoading = false;
 
@@ -135,7 +135,8 @@ class _CakeFormScreenState extends State<StatefulWidget> {
                     ),
                     TextFormField(
                       keyboardType: TextInputType.number,
-                      initialValue: this._initValues["price"],
+                      initialValue: double.parse(this._initValues["price"])
+                          .toStringAsFixed(0),
                       decoration: InputDecoration(labelText: "Harga Kue"),
                       textInputAction: TextInputAction.done,
                       onFieldSubmitted: (_) {

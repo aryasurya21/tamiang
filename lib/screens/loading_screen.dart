@@ -4,9 +4,11 @@ class LoadingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        child: Center(
-          child: Text("Loading.."),
+      backgroundColor: Theme.of(context).accentColor,
+      body: Center(
+        child: Text(
+          "Loading...",
+          style: TextStyle(fontSize: 35, fontWeight: FontWeight.bold),
         ),
       ),
     );

@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:tamiang/providers/auth_provider.dart';
+import 'package:tamiang/screens/auth_screen.dart';
 import 'package:tamiang/screens/user_cake_screen.dart';
 
 class NavigationDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final userID = Provider.of<AuthProvider>(context).userID;
     return Drawer(
       child: Column(
         children: <Widget>[
           AppBar(
-            title: Text("Hello Mamaku yang cantik"),
+            title: userID == null
+                ? "Hello... "
+                : userID.startsWith("XSlN")
+                    ? Text("Hello Mamaku yang cantik")
+                    : Text("Hello.."),
             automaticallyImplyLeading: false,
           ),
           Divider(),
@@ -33,7 +41,7 @@ class NavigationDrawer extends StatelessWidget {
               Navigator.of(context)
                   .pushReplacementNamed(UserCakeScreen.routeName);
             },
-          )
+          ),
         ],
       ),
     );
