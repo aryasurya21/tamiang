@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:tamiang/providers/auth_provider.dart';
-import 'package:tamiang/screens/auth_screen.dart';
 import 'package:tamiang/screens/user_cake_screen.dart';
 
 class NavigationDrawer extends StatelessWidget {
