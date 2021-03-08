@@ -31,7 +31,7 @@
 /build/
 
 # Web related
-lib/generated_plugin_registrant.dart
+lib/constants/constant.dart
 
 # Symbolication related
 app.*.symbols
